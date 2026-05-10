@@ -1,2 +1,4 @@
 # SMART-TRANSIT-GPS-FREE-BUS-TRACKING-SYSTEM-USING-RFID-AND-CAMERA-DETECTION
 The primary objective of this project is to design and develop a GPS-free smart bus tracking system using RFID and camera detection. The system aims to accurately track bus movement at designated checkpoints and provide real-time updates through a web-based platform.
+Another objective is to integrate image processing techniques to verify bus identity and improve detection accuracy. The project also focuses on developing a centralized monitoring system that allows administrators to track bus activity and analyze system performance.
+Additionally, the system aims to provide a cost-effective solution that can be easily implemented in various transportation environments, including schools, colleges, and public transit systems.
