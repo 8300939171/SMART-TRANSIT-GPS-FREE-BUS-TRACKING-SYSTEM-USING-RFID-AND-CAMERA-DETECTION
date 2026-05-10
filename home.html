@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Bus Dashboard</title>
+</head>
+<body>
+
+<h1>🚍 Smart Bus Dashboard</h1>
+
+<button onclick="location.href='/admin'">Admin Login</button>
+
+<hr>
+
+<h2>🟢 Running Buses</h2>
+<div id="output">Loading buses...</div>
+
+<hr>
+
+<h3>Your Location</h3>
+<input id="lat" placeholder="Enter Latitude">
+<input id="lon" placeholder="Enter Longitude">
+<button onclick="setLocation()">Track Buses</button>
+
+<script>
+
+let userLat, userLon;
+let intervalId = null;
+
+// Auto load on page start
+window.onload = loadBuses;
+
+// ---------------- SET LOCATION ----------------
+function setLocation() {
+    userLat = document.getElementById("lat").value;
+    userLon = document.getElementById("lon").value;
+
+    if (!userLat || !userLon) {
+        alert("Please enter latitude and longitude");
+        return;
+    }
+
+    loadBuses();
+
+    if (intervalId) clearInterval(intervalId);
+    intervalId = setInterval(loadBuses, 5000);
+}
+
+// ---------------- LOAD BUSES ----------------
+async function loadBuses() {
+    try {
+        const res = await fetch('/buses?t=' + Date.now());
+        const data = await res.json();
+
+        let htmlParts = [];
+
+        for (let bus in data.registered) {
+
+            if (data.registered[bus].status !== "RUNNING") continue;
+
+            let live = data.live[bus] || {};
+
+            let etaText = "N/A";
+            let distText = "N/A";
+
+            // only call ETA if user location exists
+            if (userLat && userLon && live.lat && live.lon) {
+                try {
+                    const etaRes = await fetch('/eta', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            user_lat: userLat,
+                            user_lon: userLon,
+                            bus_lat: live.lat,
+                            bus_lon: live.lon
+                        })
+                    });
+
+                    const e = await etaRes.json();
+                    etaText = e.eta;
+                    distText = e.distance;
+
+                } catch (err) {
+                    console.log("ETA error", err);
+                }
+            }
+
+            htmlParts.push(`
+                <div style="border:1px solid black; margin:10px; padding:10px;">
+                    <h3>${bus}</h3>
+                    <b>Status:</b> RUNNING<br>
+                    <b>Location:</b> ${live.location || "Waiting for GPS..."}<br>
+                    <b>ETA:</b> ${etaText}<br>
+                    <b>Distance:</b> ${distText}
+                </div>
+            `);
+        }
+
+        document.getElementById("output").innerHTML =
+            htmlParts.length ? htmlParts.join("") : "No running buses";
+
+    } catch (err) {
+        console.log(err);
+        document.getElementById("output").innerHTML = "Error loading buses";
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin</title>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+
+<input id="pin" placeholder="Enter PIN">
+<button onclick="login()">Login</button>
+
+<div id="dashboard"></div>
+
+<script>
+
+function login() {
+    fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            pin: document.getElementById("pin").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            loadDashboard();
+        } else {
+            alert("Wrong PIN");
+        }
+    });
+}
+
+function loadDashboard() {
+    fetch('/buses')
+    .then(res => res.json())
+    .then(data => {
+
+        let html = "<h3>🟡 Available Buses</h3>";
+
+        for (let bus in data.registered) {
+            if (data.registered[bus].status === "AVAILABLE") {
+                html += `<p>${bus}
+                <button onclick="startBus('${bus}')">Start</button></p>`;
+            }
+        }
+
+        html += "<h3>🟢 Running Buses</h3>";
+
+        for (let bus in data.registered) {
+            if (data.registered[bus].status === "RUNNING") {
+                html += `<p>${bus}
+                <button onclick="stopBus('${bus}')">Stop</button></p>`;
+            }
+        }
+
+        document.getElementById("dashboard").innerHTML = html;
+    });
+}
+
+function startBus(id) {
+    fetch('/start_bus', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({bus_id:id})
+    }).then(() => {
+        loadDashboard();
+    });
+}
+
+function stopBus(id) {
+    fetch('/stop_bus', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({bus_id:id})
+    }).then(() => {
+        loadDashboard();
+    });
+}
+
+</script>
+
+</body>
+</html>
